@@ -9,7 +9,12 @@
         <div>
           <a href="#" @click.prevent="doDestroy" style="float: right;">&times;</a>
           <a href="#" style="float: right; margin-right: 15px;" @click.prevent="minimized = !minimized">Minimize</a>
-          <h3 style="margin: 0;">InstaVue</h3>
+          <h3 style="margin: 0;">
+            InstaVue
+            <small v-if="activeRoot && activeRoot.framework" class="insta_vue_framework" :title="`Detected ${activeRoot.framework}`">
+              {{ activeRoot.framework }}{{ activeRoot.version ? ' ' + activeRoot.version : '' }}
+            </small>
+          </h3>
         </div>
 
         <p v-if="0===insta.roots.length">
@@ -19,7 +24,7 @@
         <div v-show="!minimized">
           <ul class="insta_vue_roots" v-if="insta.roots.length > 1">
             <li v-for="root in insta.roots">
-              <a href="#" @click.prevent="activeRoot = root">
+              <a href="#" @click.prevent="activeRoot = root" :title="root.framework">
                 {{ root.name }}
               </a>
             </li>
@@ -123,6 +128,13 @@ export default {
 
 .insta_vue_right {
   right: 0;
+}
+
+.insta_vue_framework {
+  font-weight: normal;
+  font-size: 11px;
+  color: grey;
+  vertical-align: middle;
 }
 
 /** @deprecated */

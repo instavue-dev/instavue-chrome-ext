@@ -59,13 +59,7 @@
 
         try {
           if (edited && edited !== old) {
-            const path = this.path.slice();
-            const last = path.pop();
-
-            let data = this.component.instance;
-            path.forEach(p => data = data[p]);
-
-            data[last] = edited;
+            this.component.setValue(this.path, edited);
 
             this.$emit('change-data', [], edited)
           }

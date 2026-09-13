@@ -121,8 +121,9 @@
         },
         set(value) {
           this.insta.hoveredInstance = value;
-          if (value && value.instance.$el && value.instance.$el.scrollIntoView) {
-            value.instance.$el.scrollIntoView();
+          const el = value && value.$els[0];
+          if (el && el.scrollIntoView) {
+            el.scrollIntoView();
           }
 
           this.insta.render();
@@ -134,11 +135,11 @@
         }
 
         const parents = [];
-        let parent = this.selected.$parent;
-        while (parent && parent.$parent) {
-          parents.unshift(parent.$el.__insta_vue__);
+        let parent = this.selected.parent;
+        while (parent && parent.parent) {
+          parents.unshift(parent);
 
-          parent = parent.$parent;
+          parent = parent.parent;
         }
 
         return parents;

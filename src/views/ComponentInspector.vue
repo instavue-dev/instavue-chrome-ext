@@ -22,7 +22,6 @@
 <script>
   import InstaComponent from "../app/model/InstaComponent";
   import TreeView from "../external/tree-view/TreeView";
-  import {getInstanceState} from "../app/util/VueUtil";
   import {mapGetters} from 'vuex';
 
   export default {
@@ -47,7 +46,7 @@
       },
       selectedState() {
         this.touch++; // to run updates
-        return getInstanceState(this.selected.instance);
+        return this.selected.getState();
       },
 
       selectedDataPinned() {
@@ -95,7 +94,7 @@
     methods: {
       valueChanged() {
         this.touch++;
-        this.selected.instance.$forceUpdate();
+        this.selected.forceUpdate();
       },
     },
   }

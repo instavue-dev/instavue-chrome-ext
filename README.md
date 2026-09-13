@@ -1,9 +1,14 @@
 # InstaVue – debug VueJS app in an instant
 
-Chrome extension that works like an X-ray for a Vue 2 application: click the
+Chrome extension that works like an X-ray for a Vue application: click the
 toolbar icon and it overlays every component on the page, lets you browse the
-component tree, and inspect / edit props, data, computed, injected, `$route`
-and Vuex getters – even on production builds without Vue Devtools hooks.
+component tree, and inspect / edit props, data, setup state, computed,
+injected, `$route` and Vuex getters – even on production builds without Vue
+Devtools hooks.
+
+Supports **Vue 2** and **Vue 3** (Options API, `setup()`, `<script setup>`),
+both can be on the same page. See [docs/vue3.md](docs/vue3.md) for what a Vue 3
+production build hides and how to expose it in a staging build.
 
 Web Store: https://chromewebstore.google.com/detail/nbkmhgpijnbbmfdjpmnebmgkdoiocglc
 
@@ -19,7 +24,7 @@ What is original and what is reconstructed:
 
 | Part | Status |
 |---|---|
-| `src/**` (all `.js` and `.vue` files) | **Original source**, byte-for-byte as embedded in the v2.3 source map |
+| `src/**` (all `.js` and `.vue` files) | **Original source**, byte-for-byte as embedded in the v2.3 source map (the initial commit; Vue 3 support was added on top afterwards) |
 | `public/popup.html`, `popup.js`, `popup-old.js`, `icon-128.png` | **Original**, copied from the published package |
 | `public/manifest.json` | Original content, re-formatted; the `key` and `update_url` fields that the Web Store injects were dropped |
 | `package.json`, `vue.config.js`, `babel.config.js`, `.gitignore`, this README | **Reconstructed** – the build config was never in the bundle and was inferred from it |
@@ -90,6 +95,11 @@ component overlay on a full-page `<canvas>` and handles hover/click
 selection. `src/app/util/VueUtil.js` is adapted from the Vue Devtools backend
 to extract instance state; `src/external/tree-view/` is an adapted
 `vue-json-tree-view` used to render and edit that state.
+
+Data collection is behind an adapter per framework
+(`src/app/adapters/Vue2Adapter.js`, `Vue3Adapter.js`); the UI, overlay and
+inspector only ever see `InstaComponent` objects. `Vue2Adapter` is the original
+collection code (formerly `src/app/util/VueUtil.js`).
 
 `popup-old.js` is the previous Manifest V2 injector kept for reference; it is
 not referenced by the manifest.

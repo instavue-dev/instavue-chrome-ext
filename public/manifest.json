@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "InstaVue - debug VueJS app in an instant",
-  "version": "2.3",
+  "version": "2.4",
   "description": "InstaVue just like a x-ray for VueJS application, allows you to see components and its data in just one click. Even in production.",
   "icons": {
     "128": "icon-128.png"

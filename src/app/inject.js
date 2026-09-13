@@ -1,4 +1,5 @@
 import InstaVue from "./InstaVue";
+import {rootFromNode} from "./adapters";
 
 export default function(canvas) {
   if (window.quickVue) {
@@ -24,20 +25,22 @@ export default function(canvas) {
     }
   }
 
+  const adapters = {};
   const roots = [];
   walk(document.body, node => {
     if ('insta_vue_container' === node.id) {
       return true;
     }
 
-    if (node.__vue__) {
-      roots.push(node.__vue__);
+    const root = rootFromNode(node, adapters);
+    if (root) {
+      roots.push(root);
 
       return true;
     }
   });
 
-  const insta = window.quickVue = new InstaVue(roots);
+  const insta = window.quickVue = new InstaVue(roots, adapters);
   insta.install(canvas);
 
   insta.render();

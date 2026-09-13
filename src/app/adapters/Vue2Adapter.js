@@ -1,42 +1,52 @@
+import {markRaw} from 'vue';
 import InstaComponent from "../model/InstaComponent";
-import path from "path";
+import {classify, camelize, basename, getPropType, processRouteContext, unionRect} from "./shared";
 
-function toUpper(_, c) {
-  return c ? c.toUpperCase() : ''
-}
+/**
+ * Data collection for Vue 2 apps (`el.__vue__` roots, `$children` tree).
+ * This is the original InstaVue collection code, only wrapped into the
+ * adapter interface shared with Vue3Adapter.
+ */
+export default class Vue2Adapter {
 
-function cached(fn) {
-  const cache = Object.create(null)
-  return function cachedFn(str) {
-    const hit = cache[str];
-    return hit || (cache[str] = fn(str))
+  static get id() {
+    return 'vue2';
   }
-}
 
-const classifyRE = /(?:^|[-_/])(\w)/g;
-export const classify = cached((str) => {
-  return str && str.replace(classifyRE, toUpper);
-});
+  static get label() {
+    return 'Vue 2';
+  }
 
-const camelizeRE = /-(\w)/g;
-export const camelize = cached((str) => {
-  return str.replace(camelizeRE, toUpper)
-})
+  /**
+   * @param {Node} node
+   * @return {Object|null} root Vue instance mounted on this node
+   */
+  static rootFromNode(node) {
+    return node.__vue__ || null;
+  }
 
-// Use a custom basename functions instead of the shimed version
-// because it doesn't work on Windows
-function basename(filename, ext) {
-  return path.basename(
-    filename.replace(/^[a-zA-Z]:/, '').replace(/\\/g, '/'),
-    ext
-  )
-}
+  constructor() {
+    this._byInstance = new WeakMap();
 
+    markRaw(this);
+  }
 
-export class VueUtil {
+  getVersion(instance) {
+    const Vue = instance.constructor;
+    // instance.constructor is a Vue.extend() subclass, walk to the base Vue
+    return (Vue && Vue.version) || (Vue && Vue.super && Vue.super.version) || (window.Vue && window.Vue.version) || null;
+  }
 
-  static getInstanceName(instance) {
-    const name = VueUtil.getComponentName(instance.$options || instance.fnOptions || {});
+  /**
+   * InstaComponent for the component that owns a DOM node, if known.
+   * Vue 2 stores the instance on the component's root element.
+   */
+  resolveNode(node) {
+    return node.__vue__ ? (this._byInstance.get(node.__vue__) || null) : null;
+  }
+
+  getInstanceName(instance) {
+    const name = this.getComponentName(instance.$options || instance.fnOptions || {});
     if (name) {
       return name;
     }
@@ -44,7 +54,7 @@ export class VueUtil {
     return instance.$root === instance ? 'Root' : 'Anonymous Component';
   }
 
-  static getComponentName(options) {
+  getComponentName(options) {
     const name = options.name || options._componentTag;
     if (name) {
       return name;
@@ -56,64 +66,98 @@ export class VueUtil {
     }
   }
 
-  static getInstancesList(root) {
+  getInstancesList(root) {
     const children = [];
 
-    VueUtil._walkComponent(root, children);
+    this._walkComponent(root, children);
 
     return children;
   }
 
-  static _walkComponent(instance, children, level = 0) {
+  _walkComponent(instance, children, level = 0, parent = null) {
     const component = new InstaComponent({
+      adapter: this,
       instance,
-      name: VueUtil.getInstanceName(instance),
+      parent,
+      name: this.getInstanceName(instance),
       level: level,
       area: this._getComponentArea(instance),
     });
 
-    instance.$el.__insta_vue__ = component;
+    this._byInstance.set(instance, component);
+    if (instance.$el) {
+      instance.$el.__insta_vue__ = component;
+    }
 
     children.push(component);
 
-    component.children = instance.$children.map(child => VueUtil._walkComponent(
+    component.children = instance.$children.map(child => this._walkComponent(
       child,
       children,
       level + 1,
+      component,
     ));
 
 
     return component;
   }
 
-  static _getComponentArea(instance) {
-    if (!instance.$el.getBoundingClientRect) {
-      return 0;
-    }
+  _getComponentArea(instance) {
+    const rect = this.getRect(instance);
 
-    const rect = instance.$el.getBoundingClientRect();
+    return rect ? rect.width * rect.height : 0;
+  }
 
-    return rect.width * rect.height;
+  getRootElements(instance) {
+    return instance.$el && 1 === instance.$el.nodeType ? [instance.$el] : [];
+  }
+
+  getElement(instance) {
+    return instance.$el || null;
+  }
+
+  getRect(instance) {
+    return unionRect(this.getRootElements(instance));
+  }
+
+  getUid(instance) {
+    return instance._uid;
+  }
+
+  forceUpdate(instance) {
+    instance.$forceUpdate();
+  }
+
+  /**
+   * Write a value into the instance by path (['todo', 'text']).
+   */
+  setValue(instance, path, value) {
+    path = path.slice();
+    const last = path.pop();
+
+    let data = instance;
+    path.forEach(p => data = data[p]);
+
+    data[last] = value;
+  }
+
+  getInstanceState(instance) {
+    return processProps(instance).concat(
+      processState(instance),
+      // processRefs(instance),
+      processComputed(instance),
+      processInjected(instance),
+      processRouteContext(instance),
+      processVuexGetters(instance),
+      // processFirebaseBindings(instance),
+      // processObservables(instance),
+      processAttrs(instance),
+    );
   }
 }
 
 const isLegacy = false;
 const propModes = ['default', 'sync', 'once'];
-
-export function getInstanceState(instance) {
-  return processProps(instance).concat(
-    processState(instance),
-    // processRefs(instance),
-    processComputed(instance),
-    processInjected(instance),
-    processRouteContext(instance),
-    processVuexGetters(instance),
-    // processFirebaseBindings(instance),
-    // processObservables(instance),
-    processAttrs(instance),
-  );
-}
-
 
 /**
  * Process the props of an instance.
@@ -180,21 +224,6 @@ function processAttrs(instance) {
 }
 
 /**
- * Convert prop type constructor to string.
- *
- * @param {Function} fn
- */
-
-const fnTypeRE = /^(?:function|class) (\w+)/;
-
-function getPropType(type) {
-  const match = type.toString().match(fnTypeRE);
-  return typeof type === 'function'
-    ? (match && match[1]) || 'any'
-    : 'any'
-}
-
-/**
  * Process state, filtering out props and "clean" the result
  * with a JSON dance. This removes functions which can cause
  * errors during structured clone used by window.postMessage.
@@ -218,19 +247,6 @@ function processState(instance) {
       value: instance._data[key],
       editable: true
     }));
-}
-
-/**
- * Process refs
- *
- * @param {Vue} instance
- * @return {Array}
- */
-
-function processRefs(instance) {
-  return Object.keys(instance.$refs)
-    .filter(key => instance.$refs[key])
-    .map(key => getCustomRefDetails(instance, key, instance.$refs[key]));
 }
 
 /**
@@ -274,7 +290,7 @@ function processComputed(instance) {
 }
 
 /**
- * Process Vuex getters.
+ * Process injected values.
  *
  * @param {Vue} instance
  * @return {Array}
@@ -294,49 +310,6 @@ function processInjected(instance) {
   } else {
     return [];
   }
-}
-
-/**
- * Process possible vue-router $route context
- *
- * @param {Vue} instance
- * @return {Array}
- */
-
-function processRouteContext(instance) {
-  try {
-    const route = instance.$route;
-    if (route) {
-      const {path, query, params} = route;
-      const value = {path, query, params};
-      if (route.fullPath) {
-        value.fullPath = route.fullPath;
-      }
-      if (route.hash) {
-        value.hash = route.hash;
-      }
-      if (route.name) {
-        value.name = route.name;
-      }
-      if (route.meta) {
-        value.meta = route.meta;
-      }
-      return [{
-        type: 'route',
-        key: '$route',
-        value: {
-          _custom: {
-            type: 'router',
-            abstract: true,
-            value
-          }
-        }
-      }];
-    }
-  } catch (e) {
-    // Invalid $router
-  }
-  return [];
 }
 
 /**

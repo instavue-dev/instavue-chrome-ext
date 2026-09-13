@@ -1,3 +1,4 @@
+import {markRaw} from 'vue';
 import {TEXT_ALIGNMENT} from "../constants";
 
 export class TextStyle {
@@ -15,6 +16,10 @@ const defaultStyle = new TextStyle();
 
 export class RenderUtil {
 
+  constructor() {
+    markRaw(this);
+  }
+
   _roundedRect(ctx, x, y, width, height, radius) {
     ctx.moveTo(x, y + radius);
     ctx.lineTo(x, y + height - radius);
@@ -29,17 +34,20 @@ export class RenderUtil {
 
 
   _calculatePadding(basePadding, component) {
-    const rect = component.$el.getBoundingClientRect();
+    const rect = component.getRect();
+    if (!rect) {
+      return basePadding;
+    }
 
     let padding = basePadding;
-    let parent = component.$parent;
+    let parent = component.parent;
 
     while (parent && padding > 0) {
-      if (!parent || !parent.$el.getBoundingClientRect) {
+      const rectParent = parent.getRect();
+      if (!rectParent) {
         break;
       }
 
-      const rectParent = parent.$el.getBoundingClientRect();
       if (
         rectParent.x === rect.x
         || rectParent.y === rect.y
@@ -47,7 +55,7 @@ export class RenderUtil {
         || rectParent.y + rectParent.height === rect.y + rect.height
       ) {
         padding -= 2;
-        parent = parent.$parent;
+        parent = parent.parent;
       } else {
         break;
       }
@@ -120,10 +128,10 @@ export class RenderUtil {
 
   _getNestingLevel(component) {
     let level = 0;
-    let parent = component.$parent;
+    let parent = component.parent;
 
     while (parent) {
-      parent = parent.$parent;
+      parent = parent.parent;
       level++;
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "instavue",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "description": "InstaVue - debug VueJS app in an instant. Chrome extension.",
   "scripts": {

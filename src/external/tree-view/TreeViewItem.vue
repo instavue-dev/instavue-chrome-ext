@@ -154,6 +154,9 @@
           case 'data':
             return 'Data';
 
+          case 'setup':
+            return 'Setup state';
+
           case 'injected':
             return 'Injected';
 

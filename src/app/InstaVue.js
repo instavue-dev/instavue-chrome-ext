@@ -1,19 +1,26 @@
 import {COLORS, TEXT_ALIGNMENT} from "./constants";
 import {RenderUtil, TextStyle, floor} from "./util/RenderUtil";
-import {VueUtil} from "./util/VueUtil";
-import InstaComponent from "./model/InstaComponent";
 
 
 export default class InstaVue {
 
-  constructor(roots) {
-    this.roots = roots.map(root => ({
-      root: new InstaComponent({
-        root,
-        name: VueUtil.getInstanceName(root),
-      }),
-      instances: VueUtil.getInstancesList(root)
-    }));
+  /**
+   * @param {{adapter, instance}[]} roots framework roots found on the page
+   * @param {Object} adapters live adapter instances keyed by adapter id
+   */
+  constructor(roots, adapters = {}) {
+    this.adapters = Object.values(adapters);
+    this.roots = roots.map(({adapter, instance}) => {
+      const instances = adapter.getInstancesList(instance);
+
+      return {
+        root: instances[0],
+        name: instances[0].name,
+        framework: adapter.constructor.label,
+        version: adapter.getVersion(instance),
+        instances,
+      };
+    });
     this.instances = null;
 
     this.hoveredInstance = null;
@@ -69,17 +76,51 @@ export default class InstaVue {
     this._canvas.getContext('2d').scale(2, 2);
   }
 
+  /**
+   * @return {InstaComponent|null|undefined} undefined when the point is over InstaVue's own panel
+   */
   instanceUnderMouse(x, y) {
     let node = document.elementsFromPoint(x, y)[1];
 
+    if (this.isOwnNode(node)) {
+      return undefined;
+    }
+
     while (node && 'BODY' !== node.tagName) {
-      if (node.__vue__) {
-        if (!(node.__vue__.$el.__insta_vue__ && this.ignoredComponents.includes(node.__vue__.$el.__insta_vue__.name))) {
-          return node.__vue__;
-        }
+      const component = this.componentForNode(node);
+      if (component && !this.ignoredComponents.includes(component.name)) {
+        return component;
       }
 
       node = node.parentNode;
+    }
+
+    return null;
+  }
+
+  /**
+   * Whether the node belongs to InstaVue's own panel (its events are handled by the panel itself).
+   */
+  isOwnNode(node) {
+    return !!(node && node.closest && node.closest('#insta_vue_container'));
+  }
+
+  /**
+   * Component whose root element is the node (marked while walking the tree),
+   * or the one the framework says owns the node.
+   *
+   * @return {InstaComponent|null}
+   */
+  componentForNode(node) {
+    if (node.__insta_vue__) {
+      return node.__insta_vue__;
+    }
+
+    for (const adapter of this.adapters) {
+      const component = adapter.resolveNode(node);
+      if (component) {
+        return component;
+      }
     }
 
     return null;
@@ -99,15 +140,11 @@ export default class InstaVue {
   _attachListeners() {
     // Mouse move listener
     this._mouseMoveListener = event => {
-      let instance = this.instanceUnderMouse(event.clientX, event.clientY);
+      const instance = this.instanceUnderMouse(event.clientX, event.clientY);
 
-
-      if (instance && 'insta_vue_container' === instance.$root.$el.id) {
+      if (undefined === instance) {
+        // over InstaVue's own panel
         return true;
-      }
-
-      if (instance) {
-        instance = instance.$el.__insta_vue__;
       }
 
       this.hoveredInstance = instance;
@@ -122,12 +159,9 @@ export default class InstaVue {
     this._clickListener = event => {
       let instance = this.instanceUnderMouse(event.clientX, event.clientY);
 
-      if (instance && 'insta_vue_container' === instance.$root.$el.id) {
+      if (undefined === instance) {
+        // over InstaVue's own panel
         return;
-      }
-
-      if (instance) {
-        instance = instance.$el.__insta_vue__;
       }
 
       if (instance === this.selectedInstance) {
@@ -181,7 +215,8 @@ export default class InstaVue {
         return;
       }
 
-      if (!component.$el || !component.$el.getBoundingClientRect) {
+      const rect = component.getRect();
+      if (!rect) {
         return;
       }
 
@@ -193,7 +228,6 @@ export default class InstaVue {
       const COLOR = COLORS[this._$renderUtil._getNestingLevel(component)];
       ctx.strokeStyle = `rgba(${COLOR}, 0.9)`;
 
-      const rect = component.$el.getBoundingClientRect();
       const x = rect.left - canvasRect.left;
       const y = rect.top - canvasRect.top;
 
@@ -208,8 +242,9 @@ export default class InstaVue {
       ctx.stroke();
     });
 
-    if (this.hoveredInstance && this.selectedInstance !== this.hoveredInstance) {
-      const rect = this.hoveredInstance.$el.getBoundingClientRect();
+    const hoveredRect = this.hoveredInstance && this.hoveredInstance.getRect();
+    if (hoveredRect && this.selectedInstance !== this.hoveredInstance) {
+      const rect = hoveredRect;
 
       const COLOR = COLORS[this._$renderUtil._getNestingLevel(this.hoveredInstance)];
 
@@ -246,8 +281,9 @@ export default class InstaVue {
       ctx.stroke();
     }
 
-    if (this.selectedInstance) {
-      const rect = this.selectedInstance.$el.getBoundingClientRect();
+    const selectedRect = this.selectedInstance && this.selectedInstance.getRect();
+    if (selectedRect) {
+      const rect = selectedRect;
       ctx.setLineDash([]);
 
       const COLOR = COLORS[this._$renderUtil._getNestingLevel(this.selectedInstance)];
@@ -285,17 +321,16 @@ export default class InstaVue {
         return;
       }
 
-      if (!component.$el.getBoundingClientRect) {
+      const rect = component.getRect();
+      if (!rect) {
         return;
       }
 
-      // TODO: need to bulletproof this (look into official vue toolbar)
-      const name = VueUtil.getComponentName(component);
+      const name = component.name;
 
       const canvasRect = this._canvas.getBoundingClientRect();
-      const componentNode = component.$el;
+      const componentNode = component.$els[0] || component.$el;
 
-      const rect = componentNode.getBoundingClientRect();
       const x = rect.left - canvasRect.left;
       const y = rect.top - canvasRect.top;
 
@@ -305,7 +340,9 @@ export default class InstaVue {
       this._$renderUtil._renderText(ctx, displayName, floor(x + rect.width / 2), y, styleComponent);
 
       if (component === this.selectedInstance || component === this.hoveredInstance) {
-        this._$renderUtil._renderText(ctx, "(" + componentNode.tagName + (componentNode.id ? '#' + componentNode.id : '') + ")", floor(x + rect.width / 2), y + styleComponent.size, styleComponent);
+        const tag = (componentNode && componentNode.tagName) || '#text';
+        const multiRoot = component.$els.length > 1 ? ' +' + (component.$els.length - 1) : '';
+        this._$renderUtil._renderText(ctx, "(" + tag + (componentNode && componentNode.id ? '#' + componentNode.id : '') + multiRoot + ")", floor(x + rect.width / 2), y + styleComponent.size, styleComponent);
       }
     });
   }

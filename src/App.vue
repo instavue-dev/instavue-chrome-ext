@@ -2,29 +2,44 @@
   <div id="insta_vue_container">
     <div id="insta_vue_inner_container" :class="[`insta_vue_${position}`, {insta_vue_inner_container_minimized: minimized}]">
       <div id="insta_vue_wrapper" v-if="insta">
-        <div style="text-align: center;">
-          <a href="https://forms.gle/zQB6t2HCcFDVmiP1A" target="_blank" class="ml-4">🚀 JOIN THE COMMUNITY FOR GROW! 🚀</a>
+        <div class="insta_vue_head">
+          <div class="insta_vue_head_row">
+            <h3 class="insta_vue_title">
+              InstaVue
+              <small v-if="activeRoot && activeRoot.framework" :title="`Detected ${activeRoot.framework}`">
+                {{ activeRoot.framework }}{{ activeRoot.version ? ' ' + activeRoot.version : '' }}
+              </small>
+            </h3>
+
+            <div class="insta_vue_actions insta_vue_collapse" title="Minimize / expand">
+              <button class="insta_vue_action_btn" :disabled="minimized" @click="minimized = true" title="Minimize"></button>
+              <button class="insta_vue_action_btn" :disabled="!minimized" @click="minimized = false" title="Expand"></button>
+            </div>
+
+            <button class="insta_vue_close" @click="doDestroy" title="Close InstaVue"></button>
+          </div>
+
+          <div class="insta_vue_head_row" v-show="!minimized">
+            <a href="https://forms.gle/zQB6t2HCcFDVmiP1A" target="_blank" rel="noopener" class="insta_vue_link">Support/Discuss</a>
+
+            <div class="insta_vue_actions insta_vue_position" title="Dock the panel left / right">
+              <button class="insta_vue_action_btn" :disabled="'left' === position" @click="setPosition('left')" title="Dock left"></button>
+              <button class="insta_vue_action_btn" :disabled="'right' === position" @click="setPosition('right')" title="Dock right"></button>
+            </div>
+          </div>
+
+          <!-- Minimap of the inspected page - to be implemented, hidden for now -->
+          <div class="insta_vue_minimap" v-if="showMinimap && !minimized"></div>
         </div>
 
-        <div>
-          <a href="#" @click.prevent="doDestroy" style="float: right;">&times;</a>
-          <a href="#" style="float: right; margin-right: 15px;" @click.prevent="minimized = !minimized">Minimize</a>
-          <h3 style="margin: 0;">
-            InstaVue
-            <small v-if="activeRoot && activeRoot.framework" class="insta_vue_framework" :title="`Detected ${activeRoot.framework}`">
-              {{ activeRoot.framework }}{{ activeRoot.version ? ' ' + activeRoot.version : '' }}
-            </small>
-          </h3>
-        </div>
+        <div class="insta_vue_body" v-show="!minimized">
+          <p v-if="0 === insta.roots.length" class="insta_vue_empty">
+            No Vue apps detected
+          </p>
 
-        <p v-if="0===insta.roots.length">
-          No Vue apps detected
-        </p>
-
-        <div v-show="!minimized">
           <ul class="insta_vue_roots" v-if="insta.roots.length > 1">
-            <li v-for="root in insta.roots">
-              <a href="#" @click.prevent="activeRoot = root" :title="root.framework">
+            <li v-for="root in insta.roots" :key="root.name + root.framework">
+              <a href="#" @click.prevent="activeRoot = root" :class="{insta_vue_roots_active: root === activeRoot}" :title="root.framework">
                 {{ root.name }}
               </a>
             </li>
@@ -33,15 +48,9 @@
           <RootView v-if="activeRoot" :insta="insta" :root="activeRoot.root" :children="activeRoot.instances"/>
 
           <div id="insta_vue_container_footer">
-            <div>
-              <a href="#" @click.prevent="togglePosition" id="insta_vue_container_footer_switcher">&larr; &rarr;</a>
-
-              <button @click="doDestroy">Close</button>
-
-              <a href="https://enloop.md" target="_blank" rel="noopener" class="insta_vue_banner" title="enloop.md - manage human context">
-                enloop.md &mdash; manage human context
-              </a>
-            </div>
+            <a href="https://enloop.md" target="_blank" rel="noopener" class="insta_vue_banner" title="enloop.md - manage human context">
+              enloop.md &mdash; manage human context
+            </a>
           </div>
         </div>
       </div>
@@ -65,6 +74,8 @@ export default {
       activeRoot: null,
       position: 'left',
       minimized: false,
+      // the minimap is not implemented yet
+      showMinimap: false,
     };
   },
   watch: {
@@ -82,9 +93,9 @@ export default {
     },
   },
   methods: {
-    togglePosition() {
+    setPosition(position) {
       setTimeout(() => {
-        this.position = 'left' === this.position ? 'right' : 'left';
+        this.position = position;
       }, 100);
     },
     doDestroy() {
@@ -102,108 +113,4 @@ export default {
 }
 </script>
 
-
-<style>
-
-#insta_vue_inner_container.insta_vue_inner_container_minimized {
-  bottom: initial !important;
-}
-
-#insta_vue_inner_container {
-  position: fixed;
-  width: 25vw;
-  top: 0;
-  bottom: 0;
-  z-index: 1000000;
-  padding: 5px;
-
-  font-size: 14px !important;
-  color: black;
-}
-
-#insta_vue_wrapper {
-  background-color: white;
-  border: 1px solid grey;
-  border-radius: 5px;
-  height: 100%;
-  overflow: scroll;
-  padding: 15px 15px 40px;
-}
-
-.insta_vue_right {
-  right: 0;
-}
-
-.insta_vue_framework {
-  font-weight: normal;
-  font-size: 11px;
-  color: grey;
-  vertical-align: middle;
-}
-
-/** @deprecated */
-span.tree-view-item-key {
-  color: black;
-}
-
-span.tree-view-item-value {
-  color: green;
-}
-
-.tree-view-item-root > .tree-view-item-leaf:first-child > .tree-view-item-node:first-child > .tree-view-item-key:first-child {
-  display: none;
-}
-
-.tree-view-item-root > .tree-view-item-leaf:first-child > .tree-view-item {
-  margin-left: 0 !important;
-}
-
-
-.insta_vue_roots {
-  margin: 0;
-  padding: 0;
-}
-
-.insta_vue_roots li {
-  display: inline-block;
-  margin-right: 5px;
-}
-
-.insta_vue_roots li:after {
-  content: '|';
-}
-
-.insta_vue_roots li:last-child:after {
-  content: '';
-}
-
-#insta_vue_container_footer > div {
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-#insta_vue_container_footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 15px;
-}
-
-#insta_vue_container_footer_switcher {
-  float: right;
-}
-
-.insta_vue_banner {
-  margin-left: 10px;
-  font-size: 11px;
-  color: grey;
-  text-decoration: none;
-  opacity: 0.7;
-}
-
-.insta_vue_banner:hover {
-  opacity: 1;
-  text-decoration: underline;
-}
-
-</style>
+<style src="./assets/panel.css"></style>

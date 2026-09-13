@@ -118,6 +118,12 @@ selection. `src/app/util/VueUtil.js` is adapted from the Vue Devtools backend
 to extract instance state; `src/external/tree-view/` is an adapted
 `vue-json-tree-view` used to render and edit that state.
 
+The panel UI follows the 2020 design mock-up (`instaVue/` in the working copy,
+not committed): `src/assets/panel.css` holds the global styles, fonts (Roboto /
+Roboto Mono, Latin subset) and icons are inlined into `insta-vue.css` because it
+is injected into arbitrary pages. The minimap box at the top of the panel is
+in the markup but hidden (`showMinimap` in `App.vue`) until it is implemented.
+
 Data collection is behind an adapter per framework
 (`src/app/adapters/Vue2Adapter.js`, `Vue3Adapter.js`); the UI, overlay and
 inspector only ever see `InstaComponent` objects. `Vue2Adapter` is the original

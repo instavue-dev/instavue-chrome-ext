@@ -20,9 +20,20 @@ module.exports = {
       // Keep everything in one file - no vendor chunk
       splitChunks: false,
     },
+    // fonts and icons are inlined on purpose
+    performance: {
+      hints: false,
+    },
   },
 
   chainWebpack: config => {
+    // The CSS is injected into arbitrary pages, so fonts and icons can not be
+    // referenced by path - inline everything as data URIs.
+    config.module.rule('fonts').use('url-loader').tap(options => ({...options, limit: Infinity}));
+    config.module.rule('images').use('url-loader').tap(options => ({...options, limit: Infinity}));
+    config.module.rule('svg').uses.clear();
+    config.module.rule('svg').use('url-loader').loader('url-loader').options({limit: Infinity, esModule: false});
+
     // Not a web page - no index.html or preload hints
     config.plugins.delete('html');
     config.plugins.delete('preload');

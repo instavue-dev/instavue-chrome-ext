@@ -1,14 +1,10 @@
 <template>
     <div class="tree-view-item">
-        <div v-if="isObject(data) && isShowingCurrent" class="tree-view-item-leaf">
+        <div v-if="isObject(data) && isShowingCurrent" class="tree-view-item-leaf" :class="{opened: isOpen()}">
             <div class="tree-view-item-node" @click.stop="toggleOpen()">
                 <span :class="{opened: isOpen()}" class="tree-view-item-key tree-view-item-key-with-chevron">
 
                     <template v-if="1 === currentDepth ">
-                        <span class="insta_vue_variable_control">
-                            <a href="#" :style="{opacity: pinnedVars.includes(data.key) ? 1 : 0.3}" @click.prevent="togglePinnedVar(data.key)">📌</a>
-                        </span>
-
                         <i class="insta_vue_atribute_type" v-if="getTypeString(data.key)" :title="getTypeString(data.key)">{{ getTypeString(data.key)[0] }}</i>
                     </template>
 
@@ -17,6 +13,9 @@
                 </span>
                 <span class="tree-view-item-hint" v-show="!isOpen() && data.children.length === 1">{{data.children.length}} property</span>
                 <span class="tree-view-item-hint" v-show="!isOpen() && data.children.length !== 1">{{data.children.length}} properties</span>
+                <span class="insta_vue_variable_control" v-if="1 === currentDepth">
+                    <a href="#" :class="{insta_vue_variable_control_active: pinnedVars.includes(data.key)}" @click.prevent="togglePinnedVar(data.key)" :title="pinnedVars.includes(data.key) ? 'Unpin' : 'Pin'"></a>
+                </span>
             </div>
 
             <tree-view-item
@@ -28,14 +27,10 @@
                     @change-data="onChangeData"></tree-view-item>
         </div>
 
-        <div class="tree-view-item-leaf" v-if="isArray(data) && isShowingCurrent">
+        <div class="tree-view-item-leaf" :class="{opened: isOpen()}" v-if="isArray(data) && isShowingCurrent">
             <div class="tree-view-item-node" @click.stop="toggleOpen()">
                 <span :class="{opened: isOpen()}" class="tree-view-item-key tree-view-item-key-with-chevron">
                     <template v-if="1 === currentDepth ">
-                        <span class="insta_vue_variable_control">
-                            <a href="#" :style="{opacity: pinnedVars.includes(data.key) ? 1 : 0.3}" @click.prevent="togglePinnedVar(data.key)">📌</a>
-                        </span>
-
                         <i class="insta_vue_atribute_type" v-if="getTypeString(data.key)" :title="getTypeString(data.key)">{{ getTypeString(data.key)[0] }}</i>
                     </template>
 
@@ -43,6 +38,9 @@
                 </span>
                 <span class="tree-view-item-hint" v-show="!isOpen() && data.children.length === 1">{{data.children.length}} item</span>
                 <span class="tree-view-item-hint" v-show="!isOpen() && data.children.length !== 1">{{data.children.length}} items</span>
+                <span class="insta_vue_variable_control" v-if="1 === currentDepth">
+                    <a href="#" :class="{insta_vue_variable_control_active: pinnedVars.includes(data.key)}" @click.prevent="togglePinnedVar(data.key)" :title="pinnedVars.includes(data.key) ? 'Unpin' : 'Pin'"></a>
+                </span>
             </div>
             <tree-view-item
                     v-for="child in data.children" :key="getKey(child)" :path="path.concat(child.key)"
@@ -214,67 +212,106 @@
 <style scoped>
 
     .tree-view-item {
-        font-family: monaco, monospace;
+        font-family: var(--insta-vue-sans);
         font-size: 14px;
-        margin-left: 18px;
+        margin-left: 13px;
     }
 
-    .tree-view-item-node {
-        cursor: pointer;
+    /* root node: no indent, key hidden (it is the component itself) */
+    .tree-view-item-root {
+        margin-left: 0 !important;
+    }
+
+    .tree-view-item-root > .tree-view-item-leaf > .tree-view-item-node {
+        display: none;
+    }
+
+    .tree-view-item-root > .tree-view-item-leaf > .tree-view-item {
+        margin-left: 13px;
+        margin-bottom: 15px;
+    }
+
+    .tree-view-item-leaf {
         position: relative;
         white-space: nowrap;
     }
 
-    .tree-view-item-leaf {
+    /* dashed guide line for an expanded node */
+    .tree-view-item-leaf.opened::after {
+        content: '';
+        position: absolute;
+        top: 22px;
+        bottom: 2px;
+        left: -11px;
+        border-left: 1px dashed var(--insta-vue-line);
+    }
+
+    .tree-view-item-root > .tree-view-item-leaf.opened::after {
+        display: none;
+    }
+
+    .tree-view-item-node {
+        display: flex;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+        line-height: 22px;
         white-space: nowrap;
     }
 
     .tree-view-item-key {
-        font-weight: bold;
+        font-weight: 500;
+        color: var(--insta-vue-text);
+    }
+
+    /* top level keys of the component: mono */
+    .tree-view-item-root > .tree-view-item-leaf > .tree-view-item > .tree-view-item-leaf > .tree-view-item-node > .tree-view-item-key {
+        font-family: var(--insta-vue-mono);
+        font-size: 16px;
     }
 
     .tree-view-item-key-with-chevron {
-        padding-left: 14px;
-    }
-
-
-    .tree-view-item-key-with-chevron.opened::before {
-        top: 4px;
-        transform: rotate(90deg);
-        -webkit-transform: rotate(90deg);
+        padding-left: 0;
     }
 
     .tree-view-item-key-with-chevron::before {
-        color: #444;
-        /*content: '▶';*/
-        content: '>';
-        font-size: 10px;
-        left: 1px;
+        content: '';
         position: absolute;
-        top: 3px;
-        transition: -webkit-transform .1s ease;
+        top: 50%;
+        left: -13px;
+        width: 7px;
+        height: 8px;
+        background: url('../../assets/img/arr-drop.svg') center no-repeat;
+        transform: translateY(-50%);
         transition: transform .1s ease;
-        transition: transform .1s ease, -webkit-transform .1s ease;
-        -webkit-transition: -webkit-transform .1s ease;
+    }
+
+    .tree-view-item-key-with-chevron.opened::before {
+        transform: translateY(-50%) rotate(90deg);
     }
 
     .tree-view-item-hint {
-        color: #ccc
-    }
-
-
-    .insta_vue_atribute_type {
-        padding: 0 3px;
-        border-radius: 3px;
-        font-size: 8px;
-        color: black;
-        border: 1px darkgrey solid;
-        vertical-align: middle;
+        color: var(--insta-vue-muted);
+        margin-left: 8px;
+        font-size: 13px;
     }
 
     .insta_vue_variable_control {
-        float: right;
+        margin-left: auto;
+        padding-left: 10px;
         display: none;
+    }
+
+    .insta_vue_variable_control a {
+        display: inline-block;
+        width: 26px;
+        height: 22px;
+        background: url('../../assets/img/heart.svg') center no-repeat;
+        opacity: 0.45;
+    }
+
+    .insta_vue_variable_control a.insta_vue_variable_control_active {
+        opacity: 1;
     }
 
     .tree-view-item-node:hover .insta_vue_variable_control {

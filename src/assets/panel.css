@@ -1,0 +1,424 @@
+/*
+ * InstaVue panel - port of the 2020 design mock-up (instaVue/src/sass/main.sass)
+ * onto the panel's Vue markup. Fonts and icons are inlined by the build
+ * (see vue.config.js) because this stylesheet is injected into arbitrary pages.
+ */
+
+@font-face {
+  font-family: 'InstaVue Roboto';
+  font-weight: 400;
+  font-style: normal;
+  font-display: fallback;
+  src: url('./fonts/Roboto-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'InstaVue Roboto';
+  font-weight: 500;
+  font-style: normal;
+  font-display: fallback;
+  src: url('./fonts/Roboto-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'InstaVue Roboto Mono';
+  font-weight: 500;
+  font-style: normal;
+  font-display: fallback;
+  src: url('./fonts/RobotoMono-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'InstaVue Roboto Mono';
+  font-weight: 700;
+  font-style: normal;
+  font-display: fallback;
+  src: url('./fonts/RobotoMono-Bold.woff2') format('woff2');
+}
+
+#insta_vue_container {
+  --insta-vue-blue: #1F7BE8;
+  --insta-vue-green: #008000;
+  --insta-vue-line: #DBDBDB;
+  --insta-vue-line-soft: #EEEEEE;
+  --insta-vue-text: #000;
+  --insta-vue-text-soft: #2F3032;
+  --insta-vue-muted: #ABABAB;
+  --insta-vue-bg-soft: #F9F9F9;
+  --insta-vue-sans: 'InstaVue Roboto', Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --insta-vue-mono: 'InstaVue Roboto Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+}
+
+/* ---------- panel shell ---------- */
+
+#insta_vue_inner_container {
+  position: fixed;
+  top: 20px;
+  bottom: 20px;
+  left: 20px;
+  width: clamp(360px, 25vw, 600px);
+  z-index: 1000000;
+
+  background-color: #fff;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+
+  font-family: var(--insta-vue-sans) !important;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+  color: var(--insta-vue-text) !important;
+  text-align: left;
+}
+
+#insta_vue_inner_container.insta_vue_right {
+  left: auto;
+  right: 20px;
+}
+
+#insta_vue_inner_container.insta_vue_inner_container_minimized {
+  bottom: auto !important;
+}
+
+#insta_vue_inner_container * {
+  box-sizing: border-box;
+}
+
+#insta_vue_inner_container h3 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+#insta_vue_inner_container a {
+  color: var(--insta-vue-blue);
+  text-decoration: none;
+}
+
+#insta_vue_inner_container button {
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  outline: none;
+  font: inherit;
+  color: inherit;
+}
+
+#insta_vue_inner_container input {
+  font: inherit;
+  color: inherit;
+}
+
+#insta_vue_wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 35px 20px 0;
+}
+
+/* grey strip at the very top of the panel */
+#insta_vue_wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background-color: var(--insta-vue-bg-soft);
+}
+
+.insta_vue_actions {
+  display: flex;
+}
+
+.insta_vue_action_btn {
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ---------- head ---------- */
+
+.insta_vue_head > div {
+  margin-bottom: 17px;
+}
+
+.insta_vue_head_row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.insta_vue_title {
+  font-family: var(--insta-vue-mono);
+  line-height: 22px;
+}
+
+.insta_vue_title small {
+  font-family: var(--insta-vue-sans);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--insta-vue-muted);
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+.insta_vue_close {
+  position: absolute;
+  top: -4px;
+  right: -50px;
+  width: 30px;
+  height: 30px;
+  background-color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  background-image: url('./img/cross.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* panel docked to the right edge: hang the close button on the other side */
+.insta_vue_right .insta_vue_close {
+  right: auto;
+  left: -50px;
+}
+
+/* minimize / expand stepper */
+.insta_vue_collapse {
+  border: 1px solid var(--insta-vue-line);
+  border-radius: 3px;
+  padding-left: 24px;
+}
+
+.insta_vue_collapse .insta_vue_action_btn {
+  width: 25px;
+  height: 20px;
+  border-left: 1px solid var(--insta-vue-line);
+}
+
+.insta_vue_collapse .insta_vue_action_btn:first-child {
+  background-image: url('./img/arr-up.svg');
+}
+
+.insta_vue_collapse .insta_vue_action_btn:last-child {
+  background-image: url('./img/arr-down.svg');
+}
+
+.insta_vue_collapse .insta_vue_action_btn:disabled {
+  background-color: var(--insta-vue-bg-soft);
+  cursor: default;
+}
+
+.insta_vue_link {
+  font-family: var(--insta-vue-mono);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 16px;
+  text-decoration: underline !important;
+}
+
+/* dock left / right */
+.insta_vue_position .insta_vue_action_btn {
+  width: 17px;
+  height: 10px;
+}
+
+.insta_vue_position .insta_vue_action_btn:first-child {
+  background-image: url('./img/arr-left.svg');
+}
+
+.insta_vue_position .insta_vue_action_btn:last-child {
+  background-image: url('./img/arr-right.svg');
+  margin-left: 8px;
+}
+
+.insta_vue_position .insta_vue_action_btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* minimap of the page - not implemented yet, kept hidden */
+.insta_vue_minimap {
+  margin-bottom: 12px;
+  min-height: 120px;
+  background-color: var(--insta-vue-bg-soft);
+}
+
+/* several Vue apps on the page */
+.insta_vue_roots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 17px;
+  padding: 0;
+  list-style: none;
+}
+
+.insta_vue_roots li a {
+  display: block;
+  padding: 2px 10px;
+  border: 1px solid var(--insta-vue-line);
+  border-radius: 3px;
+  font-family: var(--insta-vue-mono);
+  font-size: 13px;
+  color: var(--insta-vue-text-soft);
+}
+
+.insta_vue_roots li a.insta_vue_roots_active {
+  border-color: var(--insta-vue-blue);
+  color: var(--insta-vue-blue);
+}
+
+/* ---------- body ---------- */
+
+.insta_vue_body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.insta_vue_empty {
+  color: var(--insta-vue-muted);
+}
+
+/* scrolling area with the top shadow */
+.insta_vue_scroll {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -20px !important;
+  padding: 20px 20px 0;
+  position: relative;
+  overflow-y: auto;
+}
+
+.insta_vue_scroll::before {
+  content: '';
+  position: sticky;
+  display: block;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  height: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+/* ---------- footer banner ---------- */
+
+#insta_vue_container_footer {
+  flex: none;
+  padding: 8px 0 10px;
+  text-align: right;
+}
+
+.insta_vue_banner {
+  font-size: 11px;
+  color: var(--insta-vue-muted) !important;
+  opacity: 0.8;
+}
+
+.insta_vue_banner:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* ---------- shared: search box, round action buttons ---------- */
+
+.insta_vue_search {
+  display: flex;
+  border-radius: 3px;
+  border: 1px solid var(--insta-vue-line);
+  margin-bottom: 20px;
+}
+
+.insta_vue_search input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  line-height: 36px;
+  height: 38px;
+  font-family: var(--insta-vue-mono);
+  font-weight: 500;
+  padding-left: 40px;
+  padding-right: 15px;
+  font-size: 14px;
+  background-image: url('./img/search.svg');
+  background-repeat: no-repeat;
+  background-position: 12px center;
+}
+
+.insta_vue_search input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.insta_vue_search .insta_vue_action_btn {
+  width: 36px;
+  height: 38px;
+  flex: 0 0 36px;
+  max-width: 36px;
+  border-left: 1px solid var(--insta-vue-line);
+  background-image: url('./img/question.svg');
+  cursor: help;
+}
+
+.insta_vue_round_btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50em;
+  border: 1px solid var(--insta-vue-line);
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.45;
+}
+
+.insta_vue_round_btn:hover,
+.insta_vue_round_btn.insta_vue_round_btn_active {
+  opacity: 1;
+}
+
+.insta_vue_round_btn.insta_vue_round_btn_active {
+  border-color: var(--insta-vue-blue);
+  background-color: #EAF3FD;
+}
+
+.insta_vue_round_btn_pin {
+  background-image: url('./img/heart.svg');
+}
+
+.insta_vue_round_btn_ignore {
+  background-image: url('./img/eye.svg');
+}
+
+.insta_vue_toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--insta-vue-text-soft);
+  cursor: pointer;
+  margin-right: 14px;
+}
+
+.insta_vue_toggle input {
+  margin: 0;
+}
+
+/* type badge: P / D / S / C ... */
+.insta_vue_atribute_type {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--insta-vue-line);
+  font-family: var(--insta-vue-sans);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  text-align: center;
+  color: var(--insta-vue-text-soft);
+  margin-right: 9px;
+  vertical-align: middle;
+}

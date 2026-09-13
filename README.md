@@ -67,6 +67,9 @@ npm run build              # static site in playground/dist, extension assets in
 ```
 
 Or from the repo root: `npm run playground` / `npm run playground:build`.
+
+Live: **https://instavue-dev.github.io/instavue-chrome-ext/** — deployed by
+`.github/workflows/pages.yml` on every push to `main`.
 The site is built with `features.prodDevtools` so `<script setup>` state stays
 inspectable in the production build (see [docs/vue3.md](docs/vue3.md)).
 

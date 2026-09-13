@@ -6,7 +6,9 @@
   "scripts": {
     "build": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service build",
     "serve": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service build --watch --mode development",
-    "zip": "npm run build && cd ext && zip -r ../instavue-$npm_package_version.zip . -x '*.map'"
+    "zip": "npm run build && cd ext && zip -r ../instavue-$npm_package_version.zip . -x '*.map'",
+    "playground": "npm --prefix playground run dev",
+    "playground:build": "npm run build && npm --prefix playground run build"
   },
   "dependencies": {
     "core-js": "^3.41.0",

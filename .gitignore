@@ -1,4 +1,6 @@
 node_modules/
+playground/node_modules/
+playground/dist/
 ext/
 *.zip
 _old-build-2019/

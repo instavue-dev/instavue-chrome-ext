@@ -51,6 +51,25 @@ Then load `ext/` as an unpacked extension via `chrome://extensions` →
 `ext/` is fully generated (it is git-ignored): `src/` is compiled into
 `ext/insta-vue.js` + `ext/insta-vue.css`, and `public/` is copied in alongside.
 
+## Playground site
+
+`playground/` is a small Vue 3 site (Vite) that doubles as a demo: every piece
+of content on it - extension name, feature list, steps, the counter and todo
+widgets - is component state, and an **Activate InstaVue** button injects the
+extension build into the page the same way the popup does, so no installed
+extension is needed. Use it to try the tool or to reproduce issues.
+
+```sh
+npm run build              # the site serves ../ext/insta-vue.{js,css}
+cd playground && npm install
+npm run dev                # http://localhost:5173
+npm run build              # static site in playground/dist, extension assets included
+```
+
+Or from the repo root: `npm run playground` / `npm run playground:build`.
+The site is built with `features.prodDevtools` so `<script setup>` state stays
+inspectable in the production build (see [docs/vue3.md](docs/vue3.md)).
+
 ## Known build caveats
 
 These are consequences of reconstructing the toolchain; none affect

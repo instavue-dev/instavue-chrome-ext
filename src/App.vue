@@ -37,6 +37,10 @@
               <a href="#" @click.prevent="togglePosition" id="insta_vue_container_footer_switcher">&larr; &rarr;</a>
 
               <button @click="doDestroy">Close</button>
+
+              <a href="https://enloop.md" target="_blank" rel="noopener" class="insta_vue_banner" title="enloop.md - manage human context">
+                enloop.md &mdash; manage human context
+              </a>
             </div>
           </div>
         </div>
@@ -187,6 +191,19 @@ span.tree-view-item-value {
 
 #insta_vue_container_footer_switcher {
   float: right;
+}
+
+.insta_vue_banner {
+  margin-left: 10px;
+  font-size: 11px;
+  color: grey;
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.insta_vue_banner:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 </style>

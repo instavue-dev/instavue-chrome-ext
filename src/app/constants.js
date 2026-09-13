@@ -1,0 +1,36 @@
+export const TEXT_ALIGNMENT = {
+  TOP_LEFT: 'TOP_LEFT',
+  TOP_CENTER: 'TOP_CENTER',
+  TOP_RIGHT: 'TOP_RIGHT',
+  BOTTOM_LEFT: 'BOTTOM_LEFT',
+  BOTTOM_CENTER: 'BOTTOM_CENTER',
+  BOTTOM_RIGHT: 'BOTTOM_RIGHT',
+  LEFT_CENTER: 'LEFT_CENTER',
+  RIGHT_CENTER: 'RIGHT_CENTER',
+  CENTER_CENTER: 'CENTER_CENTER',
+};
+
+export const COLORS = [
+  '0, 72, 186',
+  '176, 191, 26',
+  '124, 185, 232',
+  '201, 255, 229',
+  '178, 132, 190',
+  '114, 160, 193',
+  '242, 240, 230',
+  '240, 248, 255',
+  '196, 98, 16',
+  '239, 222, 205',
+  '229, 43, 80',
+  '159, 43, 104',
+  '241, 156, 187',
+  '255, 191, 0',
+  '255, 191, 0',
+  '255, 191, 0',
+  '255, 191, 0',
+  '255, 191, 0',
+  '255, 191, 0',
+  '255, 191, 0',
+  '255, 191, 0',
+];
+
